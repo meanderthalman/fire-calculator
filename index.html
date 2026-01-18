@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ultimate FIRE Strategy Engine v3.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: #0a0f1e; color: #e2e8f0; }
+        .card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; }
+        .input-group { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px 10px; }
+        input, select { background: transparent; border: none; color: #38bdf8; width: 100%; font-size: 0.95rem; font-weight: 600; outline: none; }
+        .label-text { font-size: 9px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.05em; }
+        .lk-text { font-size: 9px; color: #64748b; margin-top: 1px; }
+        .chart-wrap { position: relative; height: 180px; width: 100%; }
+        .status-box { transition: all 0.4s ease; }
+        .highlight-emerald { color: #10b981; }
+    </style>
+</head>
+<body class="p-3 md:p-8">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <header class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center border-b border-white/10 pb-6">
+            <div class="text-center md:text-left">
+                <h1 class="text-2xl font-bold text-sky-400">FIRE STRATEGY ENGINE</h1>
+                <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em]">Success & Sustainability Simulator</p>
+            </div>
+            <div id="statusBox" class="status-box px-6 py-4 rounded-2xl text-center border">
+                <span class="label-text">Retirement Readiness Status</span>
+                <p id="mainStatus" class="text-xl font-black uppercase tracking-widest mt-1">Ready</p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-4 space-y-4">
+                <section class="card p-4">
+                    <h2 class="label-text mb-3 text-emerald-400">1. Portfolio Assets (INR)</h2>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div class="input-group"><label class="label-text">Mutual Funds</label><input type="number" id="mfI" value="4000000" oninput="updateAll()"><div id="mfL" class="lk-text"></div></div>
+                        <div class="input-group"><label class="label-text">Stocks & ETFs</label><input type="number" id="stockI" value="3000000" oninput="updateAll()"><div id="stockL" class="lk-text"></div></div>
+                        <div class="input-group"><label class="label-text">Gold / Silver</label><input type="number" id="goldI" value="500000" oninput="updateAll()"><div id="goldL" class="lk-text"></div></div>
+                        <div class="input-group"><label class="label-text">Liquid Cash</label><input type="number" id="cashI" value="400000" oninput="updateAll()"><div id="cashL" class="lk-text"></div></div>
+                        <div class="input-group"><label class="label-text">NPS + EPF + Gratuity</label><input type="number" id="npsI" value="1500000" oninput="updateAll()"><div id="npsL" class="lk-text"></div></div>
+                        <div class="input-group"><label class="label-text">Real Estate (Invested)</label><input type="number" id="reI" value="0" oninput="updateAll()"><div id="reL" class="lk-text"></div></div>
+                    </div>
+                </section>
+
+                <section class="card p-4 border-t-4 border-red-500/30">
+                    <h2 class="label-text mb-3 text-red-400">2. Current Liabilities (INR)</h2>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div class="input-group"><label class="label-text">Home Loan Principal</label><input type="number" id="hLoanI" value="2000000" oninput="updateAll()"><div id="hLoanL" class="lk-text"></div></div>
+                        <div class="input-group"><label class="label-text">Other Loans</label><input type="number" id="oLoanI" value="0" oninput="updateAll()"><div id="oLoanL" class="lk-text"></div></div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="lg:col-span-8 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card p-4 flex flex-col items-center justify-center relative min-h-[250px]">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-6">
+                            <span class="label-text">Net Worth</span>
+                            <span id="nwCenter" class="text-lg font-bold text-sky-400">INR 0</span>
+                        </div>
+                        <div class="w-full max-w-[200px]">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 grid grid-cols-2 gap-3">
+                        <div class="input-group col-span-2"><label class="label-text">Current Monthly Expenses</label><input type="number" id="expI" value="30000" oninput="updateAll()"><div id="expL" class="lk-text"></div></div>
+                        <div class="input-group"><label class="label-text">FIRE Multiplier</label><select id="fireM" onchange="updateAll()"><option value="30">30X</option><option value="40">40X</option><option value="50" selected>50X</option><option value="60">60X</option></select></div>
+                        <div class="input-group"><label class="label-text">Lifestyle Step-up %</label><input type="number" id="stepI" value="20" oninput="updateAll()"></div>
+                        <div class="input-group col-span-2"><label class="label-text">Additional Monthly SIP</label><input type="number" id="sipI" value="75000" oninput="updateAll()"><div id="sipL" class="lk-text"></div></div>
+                        <div class="input-group"><label class="label-text">SIP Years</label><input type="number" id="sipYI" value="3" oninput="updateAll()"></div>
+                        <div class="input-group"><label class="label-text">Retire In (Yrs)</label><input type="number" id="workYI" value="5" oninput="updateAll()"></div>
+                        <div class="input-group border-l-2 border-emerald-500"><label class="label-text">Growth %</label><input type="number" id="growI" value="10" oninput="updateAll()"></div>
+                        <div class="input-group border-l-2 border-red-500"><label class="label-text">Inflation %</label><input type="number" id="inflI" value="7" oninput="updateAll()"></div>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <span class="label-text">Convergence: Wealth vs Target</span>
+                        <div class="flex items-center gap-2"><input type="checkbox" id="crashT" class="w-4 h-4 cursor-pointer" onchange="updateAll()"><label class="text-[9px] text-red-400 font-bold uppercase cursor-pointer">Stress Test: 30% Crash</label></div>
+                    </div>
+                    <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+                </div>
+
+                <div id="resultCard" class="card p-6 border-l-8 border-sky-500">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-bold text-sky-400 uppercase tracking-widest">Withdrawal Breakdown</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between"><span class="text-slate-400">Withdrawal with Step-up</span><span id="fWith" class="font-bold"></span></div>
+                                <div class="flex justify-between text-emerald-400"><span class="text-slate-400">Today's Lifestyle Value</span><span id="tWith" class="font-bold"></span></div>
+                                <div id="gapBridgeBox" class="mt-4 p-3 bg-white/5 rounded-lg border border-white/10 text-xs"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-bold text-amber-400 uppercase tracking-widest">Action Strategy</h3>
+                            <div id="recBox" class="text-[11px] space-y-2 text-slate-300 leading-relaxed"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="card p-8 space-y-6">
+            <h2 class="text-xl font-bold text-sky-400 border-b border-white/10 pb-4">Master Guide to FIRE Success</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm leading-relaxed text-slate-300">
+                <div class="space-y-3">
+                    <h3 class="font-bold text-white">Sustainability Check</h3>
+                    <p>When the status is "Success" with a 50X multiplier, it means you are using a 2% Safe Withdrawal Rate. This is considered almost unbreakable. Even if the market remains flat for a decade, your corpus is large enough that you are only harvesting a fraction of your capital gains, leaving the principal untouched.</p>
+                </div>
+                <div class="space-y-3">
+                    <h3 class="font-bold text-white">Managing Sequence of Returns</h3>
+                    <p>The "Stress Test" simulates a crash in your first year of retirement. To survive this, keep 24-36 months of expenses in a Debt/Liquid fund. If the market crashes 30%, do not sell your stocks. Withdraw from your cash bucket instead until the market recovers.</p>
+                </div>
+                <div class="space-y-3">
+                    <h3 class="font-bold text-white">The Lifestyle Step-up</h3>
+                    <p>Don't just retire to your current lifestyle. Factor in a 20% "Luxury Bump" to account for hobbies, health insurance premiums, and travel. Your FIRE number should provide freedom, not just survival.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let pieChart, lineChart;
+
+        function formatINR(val) {
+            if (val >= 10000000) return (val / 10000000).toFixed(2) + ' Cr';
+            if (val >= 100000) return (val / 100000).toFixed(2) + ' L';
+            if (val >= 1000) return (val / 1000).toFixed(1) + ' K';
+            return Math.abs(val).toFixed(0);
+        }
+
+        function initCharts() {
+            const pCtx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(pCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Equity', 'Gold', 'Cash', 'Locked', 'RE', 'Debt'],
+                    datasets: [{ data: [0,0,0,0,0,0], backgroundColor: ['#38bdf8', '#fbbf24', '#94a3b8', '#f472b6', '#a78bfa', '#ef4444'], borderWidth: 0 }]
+                },
+                options: { plugins: { legend: { display: false } }, cutout: '82%' }
+            });
+
+            const lCtx = document.getElementById('lineChart').getContext('2d');
+            lineChart = new Chart(lCtx, {
+                type: 'line',
+                data: { labels: [], datasets: [
+                    { label: 'Net Wealth', borderColor: '#10b981', data: [], tension: 0.3, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.05)' },
+                    { label: 'Target', borderColor: '#f472b6', borderDash: [5,5], data: [] }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9 } } } } }
+            });
+        }
+
+        function updateAll() {
+            const assets = {
+                eq: (parseFloat(document.getElementById('mfI').value) || 0) + (parseFloat(document.getElementById('stockI').value) || 0),
+                gold: parseFloat(document.getElementById('goldI').value) || 0,
+                cash: parseFloat(document.getElementById('cashI').value) || 0,
+                nps: parseFloat(document.getElementById('npsI').value) || 0,
+                re: parseFloat(document.getElementById('reI').value) || 0
+            };
+            const liabilities = (parseFloat(document.getElementById('hLoanI').value) || 0) + (parseFloat(document.getElementById('oLoanI').value) || 0);
+            
+            const totalAssets = Object.values(assets).reduce((a,b) => a+b, 0);
+            const netWorth = totalAssets - liabilities;
+
+            const sip = parseFloat(document.getElementById('sipI').value) || 0;
+            const sipY = parseFloat(document.getElementById('sipYI').value) || 0;
+            const workY = parseFloat(document.getElementById('workYI').value) || 0;
+            const mult = parseFloat(document.getElementById('fireM').value);
+            const stepUp = parseFloat(document.getElementById('stepI').value) / 100;
+            const curExp = parseFloat(document.getElementById('expI').value) || 0;
+            const growth = parseFloat(document.getElementById('growI').value) / 100;
+            const infl = parseFloat(document.getElementById('inflI').value) / 100;
+            const crash = document.getElementById('crashT').checked;
+
+            document.getElementById('nwCenter').innerText = 'INR ' + formatINR(netWorth);
+            ['mf','stock','gold','cash','nps','re','hLoan','oLoan','exp','sip'].forEach(id => {
+                const el = document.getElementById(id + 'L');
+                if(el) el.innerText = formatINR(parseFloat(document.getElementById(id + 'I').value) || 0);
+            });
+
+            pieChart.data.datasets[0].data = [assets.eq, assets.gold, assets.cash, assets.nps, assets.re, liabilities];
+            pieChart.update();
+
+            let labels = [], wealthData = [], targetData = [];
+            for (let i = 0; i <= workY; i++) {
+                labels.push('Yr ' + i);
+                let annualExpAtRetireYear = (curExp * 12 * Math.pow(1 + infl, i));
+                let target = annualExpAtRetireYear * (1 + stepUp) * mult;
+                targetData.push(target);
+
+                let yrAssets = totalAssets * Math.pow(1 + growth, i);
+                let rm = growth/12; 
+                if (i <= sipY) {
+                    let m = i*12;
+                    yrAssets += (rm > 0) ? sip * ((Math.pow(1 + rm, m) - 1) / rm) * (1 + rm) : sip * m;
+                } else {
+                    let m = sipY*12;
+                    let sipEnd = (rm > 0) ? sip * ((Math.pow(1 + rm, m) - 1) / rm) * (1 + rm) : sip * m;
+                    yrAssets += sipEnd * Math.pow(1 + growth, (i - sipY));
+                }
+
+                if (i === workY && crash) yrAssets -= (assets.eq * Math.pow(1 + growth, i) * 0.30);
+                wealthData.push(yrAssets - liabilities);
+            }
+            lineChart.data.labels = labels;
+            lineChart.data.datasets[0].data = wealthData;
+            lineChart.data.datasets[1].data = targetData;
+            lineChart.update();
+
+            const finalW = wealthData[wealthData.length-1];
+            const finalT = targetData[targetData.length-1];
+            const fNeedWithStep = (curExp * Math.pow(1 + infl, workY)) * (1 + stepUp);
+
+            document.getElementById('fWith').innerText = 'INR ' + formatINR(fNeedWithStep);
+            document.getElementById('tWith').innerText = 'INR ' + formatINR(curExp);
+            
+            const sBox = document.getElementById('statusBox');
+            const mStatus = document.getElementById('mainStatus');
+            const gBox = document.getElementById('gapBridgeBox');
+
+            if (finalW >= finalT) {
+                sBox.style.borderColor = "#10b981"; sBox.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+                mStatus.innerText = "FIRE SUCCESS"; mStatus.style.color = "#10b981";
+                gBox.innerHTML = `<span class="text-emerald-400 font-bold">Safe:</span> Surplus of INR ${formatINR(finalW - finalT)}. Sustainability is high.`;
+            } else {
+                sBox.style.borderColor = "#f59e0b"; sBox.style.backgroundColor = "rgba(245, 158, 11, 0.1)";
+                mStatus.innerText = "GAP DETECTED"; mStatus.style.color = "#f59e0b";
+                let gap = finalT - finalW;
+                let rm = growth/12; let n = sipY*12;
+                let addSIP = gap / (((Math.pow(1+rm, n)-1)/rm)*(1+rm));
+                gBox.innerHTML = `<p class="text-amber-400 font-bold mb-1">Bridge Strategy:</p>
+                                  <p>• Add <b>INR ${formatINR(addSIP)}/mo</b> to SIP.</p>
+                                  <p>• Or extend work by <b>${Math.ceil(gap / (fNeedWithStep * 12))} yrs</b>.</p>`;
+            }
+
+            let rHtml = `<p>• <b>Debt Drag:</b> Loans account for ${((liabilities/totalAssets)*100).toFixed(1)}% of your gross assets. Clearing these is priority #1.</p>`;
+            rHtml += `<p>• <b>Real Returns:</b> To beat ${Math.round(infl*100)}% inflation, ensure your portfolio growth stays above ${Math.round(growth*100)}%.</p>`;
+            if(crash) rHtml += `<p class="text-red-400">• <b>Crash Mitigation:</b> Build a liquid bucket for the first 2 years to protect the portfolio from selling at a 30% loss.</p>`;
+            
+            document.getElementById('recBox').innerHTML = rHtml;
+        }
+
+        initCharts(); updateAll();
+        document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', updateAll));
+    </script>
+</body>
+</html>
